@@ -1,0 +1,29 @@
+body {
+    text-align: center;
+}
+
+section {
+    display: none;
+}
+
+#login-page {
+    display: block;
+}
+
+a {
+    display: block;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.card {
+    background-color: white;
+    width: 80px;
+    height: 160px;
+    display: inline-block;
+    margin: 5px;
+}
+
+.flip-card {
+    background-color: black;
+}

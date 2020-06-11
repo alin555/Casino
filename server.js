@@ -55,9 +55,24 @@ const BlackJack = new mongoose.model("BlackJack", blackSchema)
 
 passport.use(User.createStrategy());
 
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function (user, done) {    
+    done(null, user.id);
+});
 
+passport.deserializeUser(function (id, done) {    
+    User.findById(id, function (err, user) {
+        done(err, user);
+    });
+});
+
+app.get("/check", function (req, res) {
+    if (req.isAuthenticated()) {
+
+        res.send(req.user);
+    } else {
+        res.send(401);
+    }
+})
 
 app.post("/register", function (req, res) {
 
@@ -69,7 +84,7 @@ app.post("/register", function (req, res) {
             console.log(err);
         } else {
             passport.authenticate("local")(req, res, function () {
-                res.send("ok");
+                res.send(req.user);
             });
         }
     });
@@ -88,16 +103,21 @@ app.post("/login", function (req, res) {
             console.log(err);
         } else {
             passport.authenticate("local")(req, res, function () {
-                res.send("ok");
+                res.send(req.user);
             });
         }
     });
 
 });
 
+app.get("/logout", function (req, res) {
+    req.logOut();
+    res.send();
+});
+
 app.get("/rollete", function (req, res) {
 
-    if (req.isAuthenticated) {
+    if (req.isAuthenticated()) {
 
         const betAmount = parseInt(req.query.betAmount);
         const betNumber = parseInt(req.query.betNumber);
@@ -113,12 +133,14 @@ app.get("/rollete", function (req, res) {
                     req.user.save();
                     res.send({
                         rolleteNumber: rolleteNumber,
+                        score: req.user.score,
                         win: true,
                         amount: 36 * betAmount
                     });
                 } else {
                     res.send({
                         rolleteNumber: rolleteNumber,
+                        score: req.user.score,
                         win: false,
                         amout: 0
                     });
@@ -142,10 +164,17 @@ app.get("/rollete", function (req, res) {
 
 app.get("/blackJackStart", function (req, res) {
 
-    if (req.isAuthenticated) {
+    if (req.isAuthenticated()) {
 
         const betAmount = parseInt(req.query.betAmount);
-        if (req.user.score > betAmount && betAmount > 0) {
+
+        BlackJack.findOneAndRemove({
+            "player._id": req.user._id
+        }, function (err, foundGame) {
+
+        });
+
+        if (req.user.score >= betAmount && betAmount > 0) {
 
             req.user.score -= betAmount;
             req.user.save();
@@ -179,7 +208,8 @@ app.get("/blackJackStart", function (req, res) {
                 playerCards: newGame.playerCards,
                 dealerCards: [newGame.dealerCards[0]],
                 playerAce: newGame.playerAce,
-                dealerAce: newGame.dealerAce
+                dealerAce: newGame.dealerAce,
+                score: req.user.score
             })
         } else {
             res.send(new Error("not enought coins"));
@@ -191,7 +221,7 @@ app.get("/blackJackStart", function (req, res) {
 })
 
 app.get("/blackHit", function (req, res) {
-    if (req.isAuthenticated) {
+    if (req.isAuthenticated()) {
 
         BlackJack.findOne({
             player: req.user
@@ -218,7 +248,8 @@ app.get("/blackHit", function (req, res) {
                         dealerCards: [],
                         loose: true,
                         playerSum: sumCards,
-                        ace: game.playerAce
+                        ace: game.playerAce,
+                        score: req.user.score
 
                     })
                     game.deleteOne();
@@ -231,7 +262,8 @@ app.get("/blackHit", function (req, res) {
                         dealerCards: game.dealerCards,
                         loose: false,
                         playerSum: sumCards,
-                        ace: game.playerAce
+                        ace: game.playerAce,
+                        score: req.user.score
                     })
                     game.deleteOne();
                 } else {
@@ -241,7 +273,8 @@ app.get("/blackHit", function (req, res) {
                         dealerCards: [],
                         loose: false,
                         playerSum: sumCards,
-                        ace: game.playerAce
+                        ace: game.playerAce,
+                        score: req.user.score
                     })
                     game.save();
                 }
@@ -257,7 +290,7 @@ app.get("/blackHit", function (req, res) {
 });
 
 app.get("/blackFinish", function (req, res) {
-    if (req.isAuthenticated) {
+    if (req.isAuthenticated()) {
 
         BlackJack.findOne({
             player: req.user
@@ -303,13 +336,15 @@ app.get("/blackFinish", function (req, res) {
                     res.send({
                         win: true,
                         dealerCards: foundGame.dealerCards,
-                        dealerSum: dealerSumCards
+                        dealerSum: dealerSumCards,
+                        score: req.user.score
                     })
                 } else {
                     res.send({
                         win: false,
                         dealerCards: foundGame.dealerCards,
-                        dealerSum: dealerSumCards
+                        dealerSum: dealerSumCards,
+                        score: req.user.score
 
                     })
                 }

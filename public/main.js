@@ -1,3 +1,5 @@
+let isLogin = false;
+
 const serverUrling = window.location.href;
 console.log(serverUrling);
 
@@ -19,48 +21,102 @@ $reset.hide();
 $mask.text(maskDefault);
 
 $reset.on('click', function () {
-    // remove the spinto data attr so the ball 'resets'
     $inner.attr('data-spinto', '').removeClass('rest');
     $(this).hide();
     $spin.show();
     $data.removeClass('reveal');
 });
 
-
+//// Refresh page
+$.ajax({
+    url: serverUrl + "/check",
+    type: "get",
+    success: function (data) {
+        isLogin = true;
+        Route("casino-page");
+        $("#player-name").html(data.username);
+        $("#player-score").html(data.score);
+    },
+    error: function (err) {
+        $("#login-page").css("display", "flex");
+    }
+});
 
 
 $("#login").click(function () {
     const username = $("#userName").val();
     const password = $("#password").val();
 
-    $.post(serverUrl + "/login", {
-        username: username,
-        password: password
-    }, function (data) {
-        if (data == "ok") {
+    $.ajax({
+        url: serverUrl + "/login",
+        type: "post",
+        data: {
+            username: username,
+            password: password
+        },
+        success: function (data) {
+            isLogin = true;
             Route("casino-page");
+            $("#player-name").html(data.username);
+            $("#player-score").html(data.score);
+
+
+        },
+        error: function (err) {
+            console.log(err);
+
         }
     });
+
 });
 
 $("#register").click(function () {
     const username = $("#reg-user-name").val();
     const password = $("#reg-password").val();
 
-    $.post(serverUrl + "/register", {
-        username: username,
-        password: password
-    }, function (data) {
-        if (data == "ok") {
+    $.ajax({
+        url: serverUrl + "/register",
+        type: "post",
+        data: {
+            username: username,
+            password: password
+        },
+        success: function (data) {
+            isLogin = true;
             Route("casino-page");
-        }
+            $("#player-name").html(data.username);
+            $("#player-score").html(data.score);
 
+
+        },
+        error: function (err) {
+            console.log(err);
+
+        }
     });
+
 });
 
+function Logout() {
+    $.ajax({
+        url: serverUrl + "/logout",
+        type: "get",
+        success: function () {
+            isLogin = false;
+            location.reload();
+        },
+        error: function (error) {
+            console.log(error);
+
+        }
+    })
+}
+
 function Route(page) {
-    $("section").hide();
-    $("#" + page).show();
+    if (isLogin || page == "register-page" || page == "login-page") {
+        $("section").hide();
+        $("#" + page).show();
+    }
 }
 
 ////////////// Rollete 
@@ -68,69 +124,72 @@ function RolleteStart() {
     const betAmount = $("#rollete-bet-amount").val();
     const betNumber = $("#rollete-bet-number").val();
 
-    $.get("/rollete?betAmount=" + betAmount + "&betNumber=" + betNumber, function (data) {
-        console.log(data);
+    $.ajax({
+        url: serverUrl + "/rollete",
+        type: "get",
+        data: {
+            betAmount: betAmount,
+            betNumber: betNumber
+        },
+        success: function (data) {
+            $("#player-score").html(data.score);
+            var randomNumber = data.rolleteNumber,
+                color = null;
+            $inner.attr('data-spinto', randomNumber).find('li:nth-child(' + randomNumber + ') input').prop('checked', 'checked');
+            // prevent repeated clicks on the spin button by hiding it
+            $("#spin").hide();
+            // disable the reset button until the ball has stopped spinning
+            $reset.addClass('disabled').prop('disabled', 'disabled').show();
 
-        // Rollete Animaion
-        // get a random number between 0 and 36 and apply it to the nth-child selector
-        var randomNumber = data.rolleteNumber,
-            color = null;
-        $inner.attr('data-spinto', randomNumber).find('li:nth-child(' + randomNumber + ') input').prop('checked', 'checked');
-        // prevent repeated clicks on the spin button by hiding it
-        $("#spin").hide();
-        // disable the reset button until the ball has stopped spinning
-        $reset.addClass('disabled').prop('disabled', 'disabled').show();
+            $('.placeholder').remove();
 
-        $('.placeholder').remove();
+            setTimeout(function () {
+                $mask.text('No More Bets');
+            }, timer / 2);
 
-        setTimeout(function () {
-            $mask.text('No More Bets');
-        }, timer / 2);
+            setTimeout(function () {
+                $mask.text(maskDefault);
+            }, timer + 500);
 
-        setTimeout(function () {
-            $mask.text(maskDefault);
-        }, timer + 500);
+            // remove the disabled attribute when the ball has stopped
+            setTimeout(function () {
+                $reset.removeClass('disabled').prop('disabled', '');
 
-        // remove the disabled attribute when the ball has stopped
-        setTimeout(function () {
-            $reset.removeClass('disabled').prop('disabled', '');
+                if ($.inArray(randomNumber, red) !== -1) {
+                    color = 'red'
+                } else {
+                    color = 'black'
+                };
+                if (randomNumber == 0) {
+                    color = 'green'
+                };
 
-            if ($.inArray(randomNumber, red) !== -1) {
-                color = 'red'
-            } else {
-                color = 'black'
-            };
-            if (randomNumber == 0) {
-                color = 'green'
-            };
+                $('.result-number').text(randomNumber);
+                $('.result-color').text(color);
+                $('.result').css({
+                    'background-color': '' + color + ''
+                });
+                $data.addClass('reveal');
+                $inner.addClass('rest');
 
-            $('.result-number').text(randomNumber);
-            $('.result-color').text(color);
-            $('.result').css({
-                'background-color': '' + color + ''
-            });
-            $data.addClass('reveal');
-            $inner.addClass('rest');
+                $thisResult = '<li class="previous-result color-' + color + '"><span class="previous-number">' + randomNumber + '</span><span class="previous-color">' + color + '</span></li>';
 
-            $thisResult = '<li class="previous-result color-' + color + '"><span class="previous-number">' + randomNumber + '</span><span class="previous-color">' + color + '</span></li>';
+                $('.previous-list').prepend($thisResult);
+                if (data.win) {
+                    $("#rollete-result").html("the number is: " + data.rolleteNumber + " you fucking win in " + data.amount + " you stupid asshole dushbag")
+                } else {
+                    $("#rollete-result").html("the number is: " + data.rolleteNumber + " you fucking Looser stupid asshole dushbag")
+                }
+            }, timer);
 
-            $('.previous-list').prepend($thisResult);
-            if (data.win) {
-                $("#rollete-result").html("the number is: " + data.rolleteNumber + " you fucking win in " + data.amount + " you stupid asshole dushbag")
-            } else {
-                $("#rollete-result").html("the number is: " + data.rolleteNumber + " you fucking Looser stupid asshole dushbag")
-            }
-        }, timer);
+        },
+        error: function (err) {
+            console.log(err);
 
-
-
-
-
-    })
-    // const rolleteNumber = Math.floor(Math.random * 32);
+        }
+    });
 
 }
-
 
 ////// BlackJack - Start Game!! (Of the fresh makers....)
 function BlackStart() {
@@ -139,68 +198,82 @@ function BlackStart() {
     $("#black-result").html("");
 
     const betAmount = $("#black-bet-amount").val();
-    $.get("/blackJackStart?betAmount=" + betAmount, function (data) {
 
-        let playerCounter = 0;
-        let dealerCounter = 0;
-        data.playerCards.forEach(card => {
+    $.ajax({
+        url: serverUrl + "/blackJackStart",
+        type: "get",
+        data: {
+            betAmount: betAmount
+        },
+        success: function (data) {
+            $("#player-score").html(data.score);
+
+            let playerCounter = 0;
+            let dealerCounter = 0;
+            data.playerCards.forEach(card => {
+                var cardDiv = document.createElement("div");
+                var cardNumber = document.createElement("h2");
+                cardDiv.classList.add("card");
+                if (card == 1) {
+                    cardNumber.innerHTML = "A";
+
+                } else {
+
+                    cardNumber.innerHTML = card;
+                }
+                cardDiv.appendChild(cardNumber);
+                $("#my-cards").append(cardDiv);
+                playerCounter += card;
+            });
+            data.dealerCards.forEach(card => {
+                var cardDiv = document.createElement("div");
+                var cardNumber = document.createElement("h2");
+                cardDiv.classList.add("card");
+
+                if (card == 1) {
+                    cardNumber.innerHTML = "A";
+
+                } else {
+
+                    cardNumber.innerHTML = card;
+                }
+
+                cardDiv.appendChild(cardNumber);
+                $("#dealer-cards").append(cardDiv);
+                dealerCounter += card;
+
+            });
             var cardDiv = document.createElement("div");
-            var cardNumber = document.createElement("h2");
             cardDiv.classList.add("card");
-            if (card == 1) {
-                cardNumber.innerHTML = "A";
+            cardDiv.classList.add("flip-card");
+            var cardNumber = document.createElement("h2");
+            cardNumber.innerHTML = "Dealer";
+            cardDiv.appendChild(cardNumber);
+
+            if (data.playerAce) {
+                $("#player-sum").html(playerCounter + 10);
 
             } else {
-
-                cardNumber.innerHTML = card;
+                $("#player-sum").html(playerCounter);
             }
-            cardDiv.appendChild(cardNumber);
-            $("#my-cards").append(cardDiv);
-            playerCounter += card;
-        });
-        data.dealerCards.forEach(card => {
-            var cardDiv = document.createElement("div");
-            var cardNumber = document.createElement("h2");
-            cardDiv.classList.add("card");
-
-            if (card == 1) {
-                cardNumber.innerHTML = "A";
+            if (data.dealerAce) {
+                $("#dealer-sum").html(dealerCounter + 10);
 
             } else {
-
-                cardNumber.innerHTML = card;
+                $("#dealer-sum").html(dealerCounter);
             }
 
-            cardDiv.appendChild(cardNumber);
+
             $("#dealer-cards").append(cardDiv);
-            dealerCounter += card;
+            $("#black-bet-amount").val("");
 
-        });
-        var cardDiv = document.createElement("div");
-        cardDiv.classList.add("card");
-        cardDiv.classList.add("flip-card");
-        var cardNumber = document.createElement("h2");
-        cardNumber.innerHTML = "Dealer";
-        cardDiv.appendChild(cardNumber);
 
-        if (data.playerAce) {
-            $("#player-sum").html(playerCounter + 10);
+        },
+        error: function (err) {
+            console.log(err);
 
-        } else {
-            $("#player-sum").html(playerCounter);
         }
-        if (data.dealerAce) {
-            $("#dealer-sum").html(dealerCounter + 10);
-
-        } else {
-            $("#dealer-sum").html(dealerCounter);
-        }
-
-
-        $("#dealer-cards").append(cardDiv);
-        $("#black-bet-amount").val("");
-
-    });;
+    });
 };
 
 function Hit() {
@@ -219,6 +292,7 @@ function Hit() {
             if (data.loose) {
                 $("#black-result").html("fucking looser idiot noob l2p");
             } else if (data.win) {
+                $("#player-score").html(data.score);
                 $("#black-result").html("fucking winner idiot noob l2p");
                 $("#dealer-cards").html("");
 
@@ -261,32 +335,43 @@ function Hit() {
 }
 
 function BlackFinish() {
-    $.get(serverUrl + "/blackFinish", function (data) {
-        $("#dealer-cards").html("");
-        data.dealerCards.forEach((card, index) => {
 
-            setTimeout(() => {
+    $.ajax({
+        url: serverUrl + "/blackFinish",
+        type: "get",
+        success: function (data) {
+            $("#player-score").html(data.score);
+            $("#dealer-cards").html("");
+            data.dealerCards.forEach((card, index) => {
 
-                var cardDiv = document.createElement("div");
-                var cardNumber = document.createElement("h2");
-                cardDiv.classList.add("card");
-                if (card == 1) {
-                    cardNumber.innerHTML = "A";
+                setTimeout(() => {
 
-                } else {
+                    var cardDiv = document.createElement("div");
+                    var cardNumber = document.createElement("h2");
+                    cardDiv.classList.add("card");
+                    if (card == 1) {
+                        cardNumber.innerHTML = "A";
 
-                    cardNumber.innerHTML = card;
-                }
-                cardDiv.appendChild(cardNumber);
-                $("#dealer-cards").append(cardDiv);
-            }, 1000 * index);
-            $("#dealer-sum").html(data.dealerSum);
+                    } else {
 
-        });
-        if (!data.win) {
-            $("#black-result").html("fucking looser idiot noob l2p");
-        } else if (data.win) {
-            $("#black-result").html("fucking winner idiot noob l2p");
+                        cardNumber.innerHTML = card;
+                    }
+                    cardDiv.appendChild(cardNumber);
+                    $("#dealer-cards").append(cardDiv);
+                }, 1000 * index);
+                $("#dealer-sum").html(data.dealerSum);
+
+            });
+            if (!data.win) {
+                $("#black-result").html("fucking looser idiot noob l2p");
+            } else if (data.win) {
+                $("#black-result").html("fucking winner idiot noob l2p");
+            }
+
+        },
+        error: function (err) {
+            console.log(err);
+
         }
-    })
+    });
 }

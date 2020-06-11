@@ -1,3 +1,7 @@
+* {
+    margin: 0;
+}
+
 body {
     text-align: center;
 }
@@ -7,7 +11,14 @@ section {
 }
 
 #login-page {
-    display: block;
+    /* display: block; */
+    display: none;
+    flex-direction: column;
+    max-width: 20%;
+    align-items: center;
+}
+#casino-page {
+    width: 60%;
 }
 
 a {
@@ -26,4 +37,49 @@ a {
 
 .flip-card {
     background-color: black;
+}
+
+#header {
+    display: flex;
+    background: brown;
+    padding: 10px;
+    justify-content: space-between;
+    height: 55px;
+
+}
+
+#pages {
+    margin-top: 10%;
+    margin-top: 10%;
+    /* text-align: center; */
+    display: flex;
+    justify-content: center;
+}
+
+h3, h4 {
+margin: 5px;
+}
+
+#main-page {
+    font-size: 66px;
+    color: darksalmon;
+    font-weight: bolder;
+}
+
+#buttons-nav {
+    width: 40%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+#buttons-nav > button {
+    background: border-box;
+    width: 20%;
+    height: 70%;
+    border-radius: 15px;
+}
+
+#login-page > * {
+    margin: 5px;
 }

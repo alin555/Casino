@@ -119,7 +119,7 @@ function Route(page) {
     }
 }
 
-////////////// Rollete 
+/////// Rollete - Start Game!
 function RolleteStart() {
     const betAmount = $("#rollete-bet-amount").val();
     const betNumber = $("#rollete-bet-number").val();
@@ -176,9 +176,9 @@ function RolleteStart() {
 
                 $('.previous-list').prepend($thisResult);
                 if (data.win) {
-                    $("#rollete-result").html("the number is: " + data.rolleteNumber + " you fucking win in " + data.amount + " you stupid asshole dushbag")
+                    $("#rollete-result").html("The number is: " + data.rolleteNumber + " You Won in " + data.amount + " !")
                 } else {
-                    $("#rollete-result").html("the number is: " + data.rolleteNumber + " you fucking Looser stupid asshole dushbag")
+                    $("#rollete-result").html("The number is: " + data.rolleteNumber + " You Lost!")
                 }
             }, timer);
 
@@ -191,7 +191,7 @@ function RolleteStart() {
 
 }
 
-////// BlackJack - Start Game!! (Of the fresh makers....)
+////// BlackJack - Start Game!
 function BlackStart() {
     $("#my-cards").html("");
     $("#dealer-cards").html("");
@@ -290,10 +290,10 @@ function Hit() {
                 $("#player-sum").html(data.playerSum);
             }
             if (data.loose) {
-                $("#black-result").html("fucking looser idiot noob l2p");
+                $("#black-result").html("You Lost!");
             } else if (data.win) {
                 $("#player-score").html(data.score);
-                $("#black-result").html("fucking winner idiot noob l2p");
+                $("#black-result").html("You Won!");
                 $("#dealer-cards").html("");
 
 
@@ -363,9 +363,9 @@ function BlackFinish() {
 
             });
             if (!data.win) {
-                $("#black-result").html("fucking looser idiot noob l2p");
+                $("#black-result").html("You Lost!");
             } else if (data.win) {
-                $("#black-result").html("fucking winner idiot noob l2p");
+                $("#black-result").html("You Won!");
             }
 
         },
@@ -376,6 +376,7 @@ function BlackFinish() {
     });
 }
 
+////// Slots - Start Game!
 function slotsStart() {
     $.ajax({
         url: serverUrl + "/slotsStart",
@@ -386,9 +387,9 @@ function slotsStart() {
                 slotsAnimation(unit, index + 1);
             });
             if (data.win) {
-                $("#slots-result").html("FUCKING WINNERRRRRRRRR");
+                $("#slots-result").html("You Won!");
             } else {
-                $("#slots-result").html("FUCKING LOOSERRRRRRRR");
+                $("#slots-result").html("You Lost!");
 
             }
 

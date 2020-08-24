@@ -375,3 +375,65 @@ function BlackFinish() {
         }
     });
 }
+
+function slotsStart() {
+    $.ajax({
+        url: serverUrl + "/slotsStart",
+        type: "get",
+        success: function (data) {
+            $("#player-score").html(data.score);
+            data.units.forEach((unit, index) => {
+                slotsAnimation(unit, index + 1);
+            });
+            if (data.win) {
+                $("#slots-result").html("FUCKING WINNERRRRRRRRR");
+            } else {
+                $("#slots-result").html("FUCKING LOOSERRRRRRRR");
+
+            }
+
+        },
+        error: function (err) {
+            console.log(err);
+
+        }
+    });
+}
+
+function slotsAnimation(chosen, index) {
+
+    const slotsImages = $(`#slot-${index} > .slots-images`);
+
+    for (let i = 0; i < slotsImages.length; i++) {
+        if (i + 1 != slotsImages.length) {
+            slotsImages[i].remove();
+        }
+    }
+
+    const units = ["cherry", "crown", "bonus", "diamond", "grape", "seven", "sun"];
+    let counter = 0;
+
+    for (let i = 0; i < 15; i++) {
+        const img = document.createElement("img");
+        const random = Math.floor(Math.random() * 7);
+        img.src = `images/${units[random]}.png`;
+        img.className = "slots-images";
+        $(`#slot-${index}`).append(img);
+    }
+    const img = document.createElement("img");
+    img.src = `images/${chosen}.png`;
+    img.className = "slots-images";
+    $(`#slot-${index}`).append(img);
+
+    const interval = setInterval(() => {
+        counter -= 50;
+        $(`#slot-${index} > .slots-images`).css("top", counter);
+
+        if(counter <= -1390) {
+        $(`#slot-${index} > .slots-images`).css("top", "-1390px");
+
+            clearInterval(interval);
+        }
+    }, 100);
+
+}

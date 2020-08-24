@@ -18,7 +18,7 @@
         <div id="buttons-nav">
             <button onclick="Route('black-jack-page')">Black-Jack</button>
             <button onclick="Route('rollete-page')">Rollete</button>
-            <button onclick="Route('lotto-page')">Slots</button>
+            <button onclick="Route('slots-page')">Slots</button>
         </div>
         <button onclick="Logout()">Log-Out</button>
 
@@ -162,6 +162,15 @@
             <p id="black-result"></p>
         </section>
 
+        <section id="slots-page">
+            <div id="slots-container">
+                <div class="slots-unit" id="slot-1"><img id="unit-1" class="slots-images" src="images/seven.png"></div>
+                <div class="slots-unit" id="slot-2"><img id="unit-2" class="slots-images" src="images/seven.png"></div>
+                <div class="slots-unit" id="slot-3"><img id="unit-3" class="slots-images" src="images/seven.png"></div>
+            </div>
+            <button id="slots-roll" onclick="slotsStart()">Roll</button>
+            <h1 id="slots-result"></h1>
+        </section>
     </div>
 
     <div id="footer">

@@ -21,6 +21,27 @@ section {
     width: 60%;
 }
 
+#slots-container {
+    border: 1px solid black;
+    height: 100px;
+    width: 400px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.slots-unit {
+    border: 1px solid black;
+    height: 95%;
+    width: 32%;
+    overflow: hidden;
+}
+
+.slots-images {
+    width: 65%;
+    position: relative;
+}
+
 a {
     display: block;
     text-decoration: underline;

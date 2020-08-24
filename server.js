@@ -55,11 +55,11 @@ const BlackJack = new mongoose.model("BlackJack", blackSchema)
 
 passport.use(User.createStrategy());
 
-passport.serializeUser(function (user, done) {    
+passport.serializeUser(function (user, done) {
     done(null, user.id);
 });
 
-passport.deserializeUser(function (id, done) {    
+passport.deserializeUser(function (id, done) {
     User.findById(id, function (err, user) {
         done(err, user);
     });
@@ -316,7 +316,7 @@ app.get("/blackFinish", function (req, res) {
                 }
 
                 while (true) {
-                    if (dealerSumCards >= playerSumCards || (foundGame.dealerAce && dealerSumCards + 10 >= playerSumCards)) {
+                    if (dealerSumCards >= playerSumCards || (foundGame.dealerAce && dealerSumCards + 10 <= 21 && dealerSumCards + 10 >= playerSumCards)) {
                         if (foundGame.dealerAce && dealerSumCards + 10 <= 21) {
                             dealerSumCards += 10;
                         }
@@ -359,6 +359,33 @@ app.get("/blackFinish", function (req, res) {
 
     } else {
         res.redirect("/");
+    }
+});
+
+app.get("/slotsStart", function (req, res) {
+    if (req.isAuthenticated()) {
+        if (req.user.score > 0) {
+            const units = ["cherry", "crown", "bonus", "diamond", "grape", "seven", "sun"];
+            win = false;
+            req.user.score -= 5
+            const random1 = Math.floor(Math.random() * 7 + 1);
+            const random2 = Math.floor(Math.random() * 7 + 1);
+            const random3 = Math.floor(Math.random() * 7 + 1);
+            if (random1 == random2 && random2 == random3) {
+                req.user.score += 200;
+                win = true;
+            }
+            req.user.save();
+            res.send({
+                win,
+                score: req.user.score,
+                units: [units[random1-1], units[random2-1], units[random3-1]]
+            })
+
+        } else {
+            res.send(new Error("not enought coins"));
+        }
+
     }
 })
 
